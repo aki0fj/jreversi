@@ -18,19 +18,6 @@ public class Evaluator implements Serializable{
   final int POW_3_9 = 19683;
   final int POW_3_10 = 59049;
 
-  final int PatternLine4 = 0;
-  final int PatternLine3 = 1;
-  final int PatternLine2 = 2;
-  final int PatternDiag8 = 3;
-  final int PatternDiag7 = 4;
-  final int PatternDiag6 = 5;
-  final int PatternDiag5 = 6;
-  final int PatternDiag4 = 7;
-  final int PatternEdge8 = 8;
-  final int PatternCornor8 = 9;
-  final int PatternParity = 10;
-  final int PatternLast = 11;
-
   final int[] PatternSize = {
     POW_3_8, POW_3_8, POW_3_8,
     POW_3_8, POW_3_7, POW_3_6, POW_3_5, POW_3_4,
@@ -44,9 +31,9 @@ public class Evaluator implements Serializable{
   public int[] MirrorCorner;
 
   public Evaluator() {
-    Value = new int[PatternLast][POW_3_8];
-    PatternNum = new int[PatternLast][POW_3_8];
-    PatternSum = new int[PatternLast][POW_3_8];
+    Value = new int[Pattern.LAST][POW_3_8];
+    PatternNum = new int[Pattern.LAST][POW_3_8];
+    PatternSum = new int[Pattern.LAST][POW_3_8];
     MirrorLine = new int[POW_3_8];
     MirrorCorner = new int[POW_3_8];
 
@@ -108,5 +95,54 @@ public class Evaluator implements Serializable{
       e.printStackTrace();
       return false;
     }
+  }
+
+  public int getValue(Board board) {
+    int result = 0;
+    result += Value[Pattern.LINE4][board.getPattern(Pattern.ID_LINE4_1)];
+    result += Value[Pattern.LINE4][board.getPattern(Pattern.ID_LINE4_2)];
+    result += Value[Pattern.LINE4][board.getPattern(Pattern.ID_LINE4_3)];
+    result += Value[Pattern.LINE4][board.getPattern(Pattern.ID_LINE4_4)];
+    result += Value[Pattern.LINE3][board.getPattern(Pattern.ID_LINE3_1)];
+    result += Value[Pattern.LINE3][board.getPattern(Pattern.ID_LINE3_2)];
+    result += Value[Pattern.LINE3][board.getPattern(Pattern.ID_LINE3_3)];
+    result += Value[Pattern.LINE3][board.getPattern(Pattern.ID_LINE3_4)];
+    result += Value[Pattern.LINE2][board.getPattern(Pattern.ID_LINE2_1)];
+    result += Value[Pattern.LINE2][board.getPattern(Pattern.ID_LINE2_2)];
+    result += Value[Pattern.LINE2][board.getPattern(Pattern.ID_LINE2_3)];
+    result += Value[Pattern.LINE2][board.getPattern(Pattern.ID_LINE2_4)];
+    result += Value[Pattern.DIAG8][board.getPattern(Pattern.ID_DIAG8_1)];
+    result += Value[Pattern.DIAG8][board.getPattern(Pattern.ID_DIAG8_2)];
+    result += Value[Pattern.DIAG7][board.getPattern(Pattern.ID_DIAG7_1)];
+    result += Value[Pattern.DIAG7][board.getPattern(Pattern.ID_DIAG7_2)];
+    result += Value[Pattern.DIAG7][board.getPattern(Pattern.ID_DIAG7_3)];
+    result += Value[Pattern.DIAG7][board.getPattern(Pattern.ID_DIAG7_4)];
+    result += Value[Pattern.DIAG6][board.getPattern(Pattern.ID_DIAG6_1)];
+    result += Value[Pattern.DIAG6][board.getPattern(Pattern.ID_DIAG6_2)];
+    result += Value[Pattern.DIAG6][board.getPattern(Pattern.ID_DIAG6_3)];
+    result += Value[Pattern.DIAG6][board.getPattern(Pattern.ID_DIAG6_4)];
+    result += Value[Pattern.DIAG5][board.getPattern(Pattern.ID_DIAG5_1)];
+    result += Value[Pattern.DIAG5][board.getPattern(Pattern.ID_DIAG5_2)];
+    result += Value[Pattern.DIAG5][board.getPattern(Pattern.ID_DIAG5_3)];
+    result += Value[Pattern.DIAG5][board.getPattern(Pattern.ID_DIAG5_4)];
+    result += Value[Pattern.DIAG4][board.getPattern(Pattern.ID_DIAG4_1)];
+    result += Value[Pattern.DIAG4][board.getPattern(Pattern.ID_DIAG4_2)];
+    result += Value[Pattern.DIAG4][board.getPattern(Pattern.ID_DIAG4_3)];
+    result += Value[Pattern.DIAG4][board.getPattern(Pattern.ID_DIAG4_4)];
+    result += Value[Pattern.EDGE8][board.getPattern(Pattern.ID_EDGE8_1)];
+    result += Value[Pattern.EDGE8][board.getPattern(Pattern.ID_EDGE8_2)];
+    result += Value[Pattern.EDGE8][board.getPattern(Pattern.ID_EDGE8_3)];
+    result += Value[Pattern.EDGE8][board.getPattern(Pattern.ID_EDGE8_4)];
+    result += Value[Pattern.EDGE8][board.getPattern(Pattern.ID_EDGE8_5)];
+    result += Value[Pattern.EDGE8][board.getPattern(Pattern.ID_EDGE8_6)];
+    result += Value[Pattern.EDGE8][board.getPattern(Pattern.ID_EDGE8_7)];
+    result += Value[Pattern.EDGE8][board.getPattern(Pattern.ID_EDGE8_8)];
+    result += Value[Pattern.CORNER8][board.getPattern(Pattern.ID_CORNER8_1)];
+    result += Value[Pattern.CORNER8][board.getPattern(Pattern.ID_CORNER8_2)];
+    result += Value[Pattern.CORNER8][board.getPattern(Pattern.ID_CORNER8_3)];
+    result += Value[Pattern.CORNER8][board.getPattern(Pattern.ID_CORNER8_4)];
+    //parity
+    result += Value[Pattern.PARITY][board.getCountDisks(Board.EMPTY) & 1];
+    return result;
   }
 }
