@@ -1,7 +1,7 @@
 import java.util.*;
 
 public class Board {
-  final int MAX_TURNS = 60;
+  final int MAX_TURNS = 0;
 
   public static final int BOARD_SIZE = 8;
 
@@ -21,13 +21,11 @@ public class Board {
   final int DOWN = BOARD_SIZE + 1;
   final int DOWN_RIGHT = BOARD_SIZE + 2;
 
-  //number of disc position
   final int NUM_DISK = ((BOARD_SIZE+1)*(BOARD_SIZE+2)+1);
-  //max occurs for pattern by position
   final int NUM_PATTERN_DIFF = 6;
 
-  int turn;           //current turn no.
-  int currentColor;
+  int turn;
+  int current_color;
 
   int[] disk;     //Current color of disks by position of board
   int[] diskNum;  //Current number of disks by color
@@ -39,18 +37,14 @@ public class Board {
 
   ArrayDeque<LinkedList<Integer>> updateLog; //Stack of updated discs by turn
 
-  HashSet<Disc>[] movablePos; //movable positions by turn
+  HashMap<Point, Integer>[] movableDir;
 
   public Board () {
     disk = new int[NUM_DISK];
     diskNum = new int[3];
     pattern = new int[Pattern.ID_LAST];
-    movablePos = new HashSet[MAX_TURNS];
-    for (int i=0; i < MAX_TURNS; i++) {
-      movablePos[i] = new HashSet<Disc>();
-    }
-    InitializePatternDiff();  //set constant for update index by pattern
-    Clear();  //initial board setting
+    InitializePatternDiff();
+    Clear();
   }
 
   void InitializePatternDiff() {
@@ -103,9 +97,9 @@ public class Board {
     putDisc(new Disc(5, 4, BLACK));
 
     turn = 0;
-    currentColor = BLACK;
+    current_color = BLACK;
     updateLog = new ArrayDeque<LinkedList<Integer>>(MAX_TURNS);
-    setMovablePos();
+    setMovableDir();
 
     //if debug -> print image of board
     if (Debug.state) {
@@ -125,27 +119,10 @@ public class Board {
       }
       disc = new Disc(i, j-1, 0);
       Debug.println("" + disc.x + "," + disc.y + disk[disc.getPos()]);
-      Debug.println("d_num=" + movablePos[turn].size());
-      Iterator it = movablePos[turn].iterator();
-      while(it.hasNext()) {
-        Disc pt = (Disc)it.next();
-        Debug.println("mov(" + pt.x + "," + pt.y + ")");
-      }
     }
   }
 
-  void setMovablePos() {
-    int i, j, cf;
-    movablePos[turn].clear();
-    for (j=0; j < BOARD_SIZE; j++) {
-      for (i=0; i < BOARD_SIZE; i++) {
-        Disc disc = new Disc(i+1, j+1, currentColor);
-        cf = getCountFlip(disc);
-        if (cf > 0) {
-          movablePos[turn].add(disc);
-        }
-      }
-    }
+  void setMovableDir() {
   }
 
   public int getPattern(int id) {
@@ -161,11 +138,11 @@ public class Board {
   }
 
   public int getCurrentColor() {
-    return currentColor;
+    return current_color;
   }
 
-  public HashSet<Disc> getMovablePos() {
-    return movablePos[turn];  //all movable pos info at current turn
+  public HashMap<Point, Integer> getMovableDir() {
+    return movableDir[turn];  //all movable pos info at current turn
   }
 
   public void putDisc(Disc disc) {
@@ -193,7 +170,7 @@ public class Board {
     int altColor = getAltColor(disc.color);
     int inPos = disc.getPos();
     int result = 0;
-    if (disk[inPos] != EMPTY) {return 0;} //cannot put disc at this position
+    if (disk[inPos] == EMPTY) {return 0;} //cannot put disc at this position
     result += getCountFlipLine(inPos, disc.color, altColor, UP_LEFT);
     result += getCountFlipLine(inPos, disc.color, altColor, UP);
     result += getCountFlipLine(inPos, disc.color, altColor, UP_RIGHT);

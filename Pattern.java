@@ -56,4 +56,124 @@ public class Pattern {
   public static final int ID_CORNER8_3 = 40;
   public static final int ID_CORNER8_4 = 41;
   public static final int ID_LAST = 42;
+
+  //positions in board
+  static final int A1 = 10;
+  static final int B1 = 11;
+  static final int C1 = 12;
+  static final int D1 = 13;
+  static final int E1 = 14;
+  static final int F1 = 15;
+  static final int G1 = 16;
+  static final int H1 = 17;
+
+  static final int A2 = 19;
+  static final int B2 = 20;
+  static final int C2 = 21;
+  static final int D2 = 22;
+  static final int E2 = 23;
+  static final int F2 = 24;
+  static final int G2 = 25;
+  static final int H2 = 26;
+
+  static final int A3 = 28;
+  static final int B3 = 29;
+  static final int C3 = 30;
+  static final int D3 = 31;
+  static final int E3 = 32;
+  static final int F3 = 33;
+  static final int G3 = 34;
+  static final int H3 = 35;
+
+  static final int A4 = 37;
+  static final int B4 = 38;
+  static final int C4 = 39;
+  static final int D4 = 40;
+  static final int E4 = 41;
+  static final int F4 = 42;
+  static final int G4 = 43;
+  static final int H4 = 44;
+
+  static final int A5 = 46;
+  static final int B5 = 47;
+  static final int C5 = 48;
+  static final int D5 = 49;
+  static final int E5 = 50;
+  static final int F5 = 51;
+  static final int G5 = 52;
+  static final int H5 = 53;
+
+  static final int A6 = 55;
+  static final int B6 = 56;
+  static final int C6 = 57;
+  static final int D6 = 58;
+  static final int E6 = 59;
+  static final int F6 = 60;
+  static final int G6 = 61;
+  static final int H6 = 62;
+
+  static final int A7 = 64;
+  static final int B7 = 65;
+  static final int C7 = 66;
+  static final int D7 = 67;
+  static final int E7 = 68;
+  static final int F7 = 69;
+  static final int G7 = 70;
+  static final int H7 = 71;
+
+  static final int A8 = 73;
+  static final int B8 = 74;
+  static final int C8 = 75;
+  static final int D8 = 76;
+  static final int E8 = 77;
+  static final int F8 = 78;
+  static final int G8 = 79;
+  static final int H8 = 80;
+
+  //block pattern in board for evalate
+  public static final int list[][] = {
+    { A4, B4, C4, D4, E4, F4, G4, H4, -1 },
+    { A5, B5, C5, D5, E5, F5, G5, H5, -1 },
+    { D1, D2, D3, D4, D5, D6, D7, D8, -1 },
+    { E1, E2, E3, E4, E5, E6, E7, E8, -1 },
+    { A3, B3, C3, D3, E3, F3, G3, H3, -1 },
+    { A6, B6, C6, D6, E6, F6, G6, H6, -1 },
+    { C1, C2, C3, C4, C5, C6, C7, C8, -1 },
+    { F1, F2, F3, F4, F5, F6, F7, F8, -1 },
+    { A2, B2, C2, D2, E2, F2, G2, H2, -1 },
+    { A7, B7, C7, D7, E7, F7, G7, H7, -1 },
+    { B1, B2, B3, B4, B5, B6, B7, B8, -1 },
+    { G1, G2, G3, G4, G5, G6, G7, G8, -1 },
+    { A1, B2, C3, D4, E5, F6, G7, H8, -1 },
+    { A8, B7, C6, D5, E4, F3, G2, H1, -1 },
+    { A2, B3, C4, D5, E6, F7, G8, -1 },
+    { B1, C2, D3, E4, F5, G6, H7, -1 },
+    { A7, B6, C5, D4, E3, F2, G1, -1 },
+    { B8, C7, D6, E5, F4, G3, H2, -1 },
+    { A3, B4, C5, D6, E7, F8, -1 },
+    { C1, D2, E3, F4, G5, H6, -1 },
+    { A6, B5, C4, D3, E2, F1, -1 },
+    { C8, D7, E6, F5, G4, H3, -1 },
+    { A4, B5, C6, D7, E8, -1 },
+    { D1, E2, F3, G4, H5, -1 },
+    { A5, B4, C3, D2, E1, -1 },
+    { D8, E7, F6, G5, H4, -1 },
+    { A5, B6, C7, D8, -1 },
+    { E1, F2, G3, H4, -1 },
+    { A4, B3, C2, D1, -1 },
+    { E8, F7, G6, H5, -1 },
+    { B2, G1, F1, E1, D1, C1, B1, A1, -1 },
+    { G2, B1, C1, D1, E1, F1, G1, H1, -1 },
+    { B7, G8, F8, E8, D8, C8, B8, A8, -1 },
+    { G7, B8, C8, D8, E8, F8, G8, H8, -1 },
+    { B2, A7, A6, A5, A4, A3, A2, A1, -1 },
+    { B7, A2, A3, A4, A5, A6, A7, A8, -1 },
+    { G2, H7, H6, H5, H4, H3, H2, H1, -1 },
+    { G7, H2, H3, H4, H5, H6, H7, H8, -1 },
+    { B3, A3, C2, B2, A2, C1, B1, A1, -1 },
+    { G3, H3, F2, G2, H2, F1, G1, H1, -1 },
+    { B6, A6, C7, B7, A7, C8, B8, A8, -1 },
+    { G6, H6, F7, G7, H7, F8, G8, H8, -1 },
+    { -1 }
+  };
 }

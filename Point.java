@@ -6,6 +6,10 @@ public class Point{
     this.y = y;
   }
 
+  public int getPos() {
+    return (Board.BOARD_SIZE + 1) * this.y + this.x;
+  }
+
   public String to_s() {
     String str = "";
     try {
