@@ -29,11 +29,11 @@ public class Board {
   int turn;           //current turn no.
   int currentColor;
 
-  int[] disk;     //Current color of disks by position of board
-  int[] diskNum;  //Current number of disks by color
+  int[] contents; //Current color of contentss by position of board
+  int[] discNum;  //Current number of contentss by color
   int[] pattern;  //Current variation no.(index) by all patterns
   
-  //difference of index when the color of disk has changed
+  //difference of index when the color of contents has changed
   int[][] patternId;  //pattern no. by position (by occurs)
   int[][] patternDiff;  //pow(3, column in pattern) by position (by occurs)
 
@@ -42,8 +42,8 @@ public class Board {
   HashSet<Disc>[] movablePos; //movable positions by turn
 
   public Board () {
-    disk = new int[NUM_DISK];
-    diskNum = new int[3];
+    contents = new int[NUM_DISK];
+    discNum = new int[3];
     pattern = new int[Pattern.ID_LAST];
     movablePos = new HashSet[MAX_TURNS];
     for (int i=0; i < MAX_TURNS; i++) {
@@ -88,43 +88,28 @@ public class Board {
     int i, j;
     Disc disc;
     for (i=0; i < NUM_DISK; i++) {
-      disk[i] = WALL;   //fill all boards with WALL
+      contents[i] = WALL;   //fill all boards with WALL
     }
     for (j=0; j < BOARD_SIZE; j++) {
       for (i=0; i < BOARD_SIZE; i++) {
         disc = new Disc(i+1, j+1, 0);
-        disk[disc.getPos()] = EMPTY;  //fill puttable position with EMPTY
+        contents[disc.getPos()] = EMPTY;  //fill puttable position with EMPTY
       }
     }
 
-    putDisc(new Disc(4, 4, WHITE));
-    putDisc(new Disc(5, 5, WHITE));
-    putDisc(new Disc(4, 5, BLACK));
-    putDisc(new Disc(5, 4, BLACK));
+    disc = new Disc(4, 4, WHITE); putPos(disc.getPos(), disc.color);
+    disc = new Disc(5, 5, WHITE); putPos(disc.getPos(), disc.color);
+    disc = new Disc(4, 5, BLACK); putPos(disc.getPos(), disc.color);
+    disc = new Disc(5, 4, BLACK); putPos(disc.getPos(), disc.color);
 
     turn = 0;
     currentColor = BLACK;
+    discNum[EMPTY] = MAX_TURNS;
     updateLog = new ArrayDeque<LinkedList<Integer>>(MAX_TURNS);
     setMovablePos();
 
     //if debug -> print image of board
     if (Debug.state) {
-      String row;
-      for (j=0; j < BOARD_SIZE+2; j++) {
-        row = "";
-        for (i=0; i < BOARD_SIZE+1; i++) {
-          disc = new Disc(i, j, 0);
-          switch (disk[disc.getPos()]) {
-          case WALL: row += "#"; break;
-          case BLACK: row += "x"; break;
-          case WHITE: row += "o"; break;
-          case EMPTY: row += "."; break;
-          }
-        }
-        Debug.println(row);
-      }
-      disc = new Disc(i, j-1, 0);
-      Debug.println("" + disc.x + "," + disc.y + disk[disc.getPos()]);
       Debug.println("d_num=" + movablePos[turn].size());
       Iterator it = movablePos[turn].iterator();
       while(it.hasNext()) {
@@ -140,7 +125,7 @@ public class Board {
     for (j=0; j < BOARD_SIZE; j++) {
       for (i=0; i < BOARD_SIZE; i++) {
         Disc disc = new Disc(i+1, j+1, currentColor);
-        cf = getCountFlip(disc);
+        cf = getCountFlip(disc.getPos(), disc.color);
         if (cf > 0) {
           movablePos[turn].add(disc);
         }
@@ -148,71 +133,19 @@ public class Board {
     }
   }
 
-  public int getPattern(int id) {
-    return pattern[id]; // return Pattern Number
-  }
-
-  public int getCountDisks(int color) {
-    return diskNum[color];
-  }
-
-  public int getTurn() {
-    return turn;
-  }
-
-  public int getCurrentColor() {
-    return currentColor;
-  }
-
-  public HashSet<Disc> getMovablePos() {
-    return movablePos[turn];  //all movable pos info at current turn
-  }
-
-  public void putDisc(Disc disc) {
-    int pos = disc.getPos();
-    disk[pos] = disc.color;
-    diskNum[disc.color]++;
-    diskNum[EMPTY]--;
-    changePattern(pos, disc.color);
-  }
-
-  public void flip(Disc disc) {
-    int flipCount = 0;  //count of flipped discs
-    LinkedList<Integer> update = new LinkedList<Integer>();
-    //flip discs to all directions
-    if (flipCount > 0) {
-      update.add(disc.getPos());  //save position of putted disc
-      update.add(disc.color);     //save color of putted disc
-      update.add(flipCount);      //save count of flipped discs
-    }
-    updateLog.add(update);
-  }
-
   //count flipable discs in all lines 
-  public int getCountFlip(Disc disc) {
-    int altColor = getAltColor(disc.color);
-    int inPos = disc.getPos();
+  public int getCountFlip(int pos, int color) {
+    int altColor = getAltColor(color);
     int result = 0;
-    if (disk[inPos] != EMPTY) {return 0;} //cannot put disc at this position
-    result += getCountFlipLine(inPos, disc.color, altColor, UP_LEFT);
-    result += getCountFlipLine(inPos, disc.color, altColor, UP);
-    result += getCountFlipLine(inPos, disc.color, altColor, UP_RIGHT);
-    result += getCountFlipLine(inPos, disc.color, altColor, LEFT);
-    result += getCountFlipLine(inPos, disc.color, altColor, RIGHT);
-    result += getCountFlipLine(inPos, disc.color, altColor, DOWN_LEFT);
-    result += getCountFlipLine(inPos, disc.color, altColor, DOWN);
-    result += getCountFlipLine(inPos, disc.color, altColor, DOWN_RIGHT);
-    return result;
-  }
-
-  //count flipable discs in given line
-  int getCountFlipLine(int inPos, int inColor, int altColor, int dir) {
-    int result = 0;
-    int pos;
-    for (pos = inPos + dir; disk[pos] == altColor; pos += dir) {
-      result++;
-    }
-    if (disk[pos] != inColor) {return 0;}  //color of end-pos not match
+    if (contents[pos] != EMPTY) {return 0;} //cannot put disc at this position
+    result += getCountFlipLine(pos, color, altColor, UP_LEFT);
+    result += getCountFlipLine(pos, color, altColor, UP);
+    result += getCountFlipLine(pos, color, altColor, UP_RIGHT);
+    result += getCountFlipLine(pos, color, altColor, LEFT);
+    result += getCountFlipLine(pos, color, altColor, RIGHT);
+    result += getCountFlipLine(pos, color, altColor, DOWN_LEFT);
+    result += getCountFlipLine(pos, color, altColor, DOWN);
+    result += getCountFlipLine(pos, color, altColor, DOWN_RIGHT);
     return result;
   }
 
@@ -230,13 +163,105 @@ public class Board {
     return alt;
   }
 
-  void flipDisc(Disc disc) {
-    int alt = getAlternate(disc.color);
-    int pos = disc.getPos();
-    disk[pos] += alt;
-    diskNum[BLACK] += alt;
-    diskNum[WHITE] -= alt;
-    changePattern(pos, alt);
+  //count flipable discs in given line
+  int getCountFlipLine(int inPos, int inColor, int altColor, int dir) {
+    int result = 0;
+    int pos;
+    for (pos = inPos + dir; contents[pos] == altColor; pos += dir) {
+      result++;
+    }
+    if (contents[pos] != inColor) {return 0;}  //color of end-pos not match
+    return result;
+  }
+
+  public int getPattern(int id) {
+    return pattern[id]; // return Pattern Number
+  }
+
+  public int[] getContents() {
+    return contents;
+  }
+
+  public int getCountDiscs(int color) {
+    return discNum[color];
+  }
+
+  public int getTurn() {
+    return turn;
+  }
+
+  public int getCurrentColor() {
+    return currentColor;
+  }
+
+  public HashSet<Disc> getMovablePos() {
+    return movablePos[turn];  //all movable pos info at current turn
+  }
+
+  public boolean put(int pos, int color) {
+    if (contents[pos] != EMPTY || getCountFlip(pos, color) == 0) {
+      return false;
+    }
+    flip(pos, color);   //flip all discs
+    turn++;
+    currentColor = getAltColor(currentColor);
+    setMovablePos();
+    return true;
+  }
+
+  public void flip(int pos, int color) {
+    putPos(pos, color);    //put new disc
+    int result = 0;   //count of flipped discs
+    LinkedList<Integer> update = new LinkedList<Integer>();
+    //flip discs to all directions
+    int altColor = getAltColor(color);
+    result += flipLine(update, pos, color, altColor, UP_LEFT);
+    result += flipLine(update, pos, color, altColor, UP);
+    result += flipLine(update, pos, color, altColor, UP_RIGHT);
+    result += flipLine(update, pos, color, altColor, LEFT);
+    result += flipLine(update, pos, color, altColor, RIGHT);
+    result += flipLine(update, pos, color, altColor, DOWN_LEFT);
+    result += flipLine(update, pos, color, altColor, DOWN);
+    result += flipLine(update, pos, color, altColor, DOWN_RIGHT);
+    if (result > 0) {
+      update.add(pos);      //save position of putted disc
+      update.add(color);    //save color of putted disc
+      update.add(result);   //save count of flipped discs
+    }
+    updateLog.add(update);
+  }
+
+  public void putPos(int pos, int color) {
+    contents[pos] = color;
+    discNum[color]++;
+    discNum[EMPTY]--;
+    changePattern(pos, color);
+  }
+
+  //flip discs in given line
+  int flipLine(LinkedList update, int inPos, int inColor, int altColor,
+                int dir) {
+    int result, pos, alt;
+    result = 0;
+    //search end of alternate color
+    for (pos = inPos + dir; contents[pos] == altColor; pos += dir) {}
+    if (contents[pos] == inColor) {  //color of end-pos match
+      //flip discs (go back to inPos)
+      for (pos -= dir; contents[pos] == altColor; pos -= dir) {
+        flipPos(pos);     //flip 1 disc
+        update.add(pos);  //save position of flipped disc
+        result++;
+      }
+    }
+    return result;
+  }
+
+  public void flipPos(int pos) {
+    int alt = getAlternate(contents[pos]);
+    contents[pos] += alt;
+    discNum[BLACK] -= alt;
+    discNum[WHITE] += alt;
+    changePattern(pos, alt);  //change index of pattern (include pos)
   }
 
   void changePattern(int pos, int alt) {
@@ -246,6 +271,31 @@ public class Board {
         Debug.println("Chg(" + pos + "," + j + ")=" + patternId[pos][j] + "," + pattern[patternId[pos][j]]);
       }
     }
+  }
+
+  public boolean pass() {
+    if (!movablePos[turn].isEmpty()) { return false; }
+    if (isGameOver()) { return false; }
+    currentColor = getAltColor(currentColor);
+    LinkedList<Integer> update = new LinkedList<Integer>();
+    updateLog.add(update);
+    setMovablePos();
+    return true;
+  }
+
+  public boolean isGameOver() {
+    if (!movablePos[turn].isEmpty()) { return false; }
+    if (turn >= MAX_TURNS) { return true; }
+    Disc disc = new Disc(0,0,0);
+    int x, y, pos;
+    int altColor = getAltColor(currentColor);
+    for (y=1; y < BOARD_SIZE+1 ; y++) {
+      for (x=1; x < BOARD_SIZE+1; x++) {
+        disc.x = x; disc.y = y; pos = disc.getPos();
+        if (getCountFlip(pos, altColor) > 0) {return false;}
+      }
+    }
+    return true;
   }
 
 }
