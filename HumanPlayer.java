@@ -35,6 +35,7 @@ class HumanPlayer extends Player {
             if (!board.put(disc.getPos(), color)) {
               System.out.println("cannot put there");
             }
+            if (Debug.state) { printPattern(board); }
             return;
           } catch (Exception e) {
             e.printStackTrace();
@@ -45,6 +46,22 @@ class HumanPlayer extends Player {
       } catch (IOException e) {
         e.printStackTrace();
         System.exit(-1);
+      }
+    }
+  }
+
+  void printPattern(Board board) {
+    String row;
+    for (int i=0; Pattern.list[i][0] >= 0; i++) {
+      int idx = board.getPattern(i);
+      if (idx != 0) {
+        row = "";
+        for (int j = 0; Pattern.list[i][j] >= 0; j++) {
+          int num = idx % 3;
+          idx /= 3;
+          row += "" + num;
+        }
+        System.out.println("ptn=" + i + ":" + row);
       }
     }
   }

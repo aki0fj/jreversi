@@ -142,7 +142,7 @@ public class Evaluator implements Serializable{
     result += Value[Pattern.CORNER8][board.getPattern(Pattern.ID_CORNER8_3)];
     result += Value[Pattern.CORNER8][board.getPattern(Pattern.ID_CORNER8_4)];
     //parity
-    result += Value[Pattern.PARITY][board.getCountDisks(Board.EMPTY) & 1];
+    result += Value[Pattern.PARITY][board.getCountDiscs(Board.EMPTY) & 1];
     return result;
   }
 }
