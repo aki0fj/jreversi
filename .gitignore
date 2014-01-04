@@ -7,3 +7,5 @@
 # Class File
 /*.class
 
+/dat/*
+
