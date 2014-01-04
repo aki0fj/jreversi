@@ -19,6 +19,7 @@ class HumanPlayer extends Player {
         switch (line) {
         case "u":
           System.out.println("undo processing...");
+          board.undo();
           return;
         case "x":
           System.out.println("exiting...");

@@ -1,8 +1,7 @@
 import java.util.*;
 
 public class Board {
-  final int MAX_TURNS = 60;
-
+  public static final int MAX_TURNS = 60;
   public static final int BOARD_SIZE = 8;
 
   //colors of discs
@@ -45,8 +44,8 @@ public class Board {
     contents = new int[NUM_DISK];
     discNum = new int[3];
     pattern = new int[Pattern.ID_LAST];
-    movablePos = new HashSet[MAX_TURNS];
-    for (int i=0; i < MAX_TURNS; i++) {
+    movablePos = new HashSet[MAX_TURNS + 1];
+    for (int i=0; i < MAX_TURNS + 1; i++) {
       movablePos[i] = new HashSet<Disc>();
     }
     InitializePatternDiff();  //set constant for update index by pattern
@@ -120,6 +119,7 @@ public class Board {
   }
 
   void setMovablePos() {
+    if (turn > MAX_TURNS) { return; }
     int i, j, cf;
     movablePos[turn].clear();
     for (j=0; j < BOARD_SIZE; j++) {
@@ -153,7 +153,7 @@ public class Board {
     return color + getAlternate(color);
   }
 
-  int getAlternate(int color) {
+  public int getAlternate(int color) {
     int alt;
     if (color == BLACK) {
       alt = 1;
@@ -224,18 +224,16 @@ public class Board {
     result += flipLine(update, pos, color, altColor, DOWN);
     result += flipLine(update, pos, color, altColor, DOWN_RIGHT);
     if (result > 0) {
-      update.add(pos);      //save position of putted disc
-      update.add(color);    //save color of putted disc
-      update.add(result);   //save count of flipped discs
+      update.push(pos);      //save position of putted disc
     }
-    updateLog.add(update);
+    updateLog.push(update);
   }
 
   public void putPos(int pos, int color) {
     contents[pos] = color;
     discNum[color]++;
     discNum[EMPTY]--;
-    changePattern(pos, color);
+    changePattern(pos, color);  //change index of pattern (include pos)
   }
 
   //flip discs in given line
@@ -249,7 +247,7 @@ public class Board {
       //flip discs (go back to inPos)
       for (pos -= dir; contents[pos] == altColor; pos -= dir) {
         flipPos(pos);     //flip 1 disc
-        update.add(pos);  //save position of flipped disc
+        update.push(pos);  //save position of flipped disc
         result++;
       }
     }
@@ -273,19 +271,41 @@ public class Board {
     }
   }
 
+  public boolean undo() {
+    if (turn == 0 || updateLog.isEmpty()) { return false;}
+    currentColor = getAltColor(currentColor);
+    LinkedList<Integer> update = updateLog.pop();
+    if (!update.isEmpty()) {
+      int pos = update.pop(); //get position of put disc in previous action
+      changePattern(pos, -(contents[pos])); //change index of pattern (include pos)
+      discNum[contents[pos]]--;
+      discNum[EMPTY]++;
+      contents[pos] = EMPTY;
+
+      //restore flipped discs
+      while (!update.isEmpty()) {
+       pos = update.pop();
+       flipPos(pos);
+      }
+      turn--;
+    }
+    setMovablePos();
+    return true;
+  }
+
   public boolean pass() {
     if (!movablePos[turn].isEmpty()) { return false; }
     if (isGameOver()) { return false; }
     currentColor = getAltColor(currentColor);
     LinkedList<Integer> update = new LinkedList<Integer>();
-    updateLog.add(update);
+    updateLog.push(update);
     setMovablePos();
     return true;
   }
 
   public boolean isGameOver() {
-    if (!movablePos[turn].isEmpty()) { return false; }
     if (turn >= MAX_TURNS) { return true; }
+    if (!movablePos[turn].isEmpty()) { return false; }
     Disc disc = new Disc(0,0,0);
     int x, y, pos;
     int altColor = getAltColor(currentColor);

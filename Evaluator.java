@@ -97,8 +97,8 @@ public class Evaluator implements Serializable{
     }
   }
 
-  public int getValue(Board board) {
-    int result = 0;
+  public long evaluate(Board board) {
+    long result = 0;
     result += Value[Pattern.LINE4][board.getPattern(Pattern.ID_LINE4_1)];
     result += Value[Pattern.LINE4][board.getPattern(Pattern.ID_LINE4_2)];
     result += Value[Pattern.LINE4][board.getPattern(Pattern.ID_LINE4_3)];
