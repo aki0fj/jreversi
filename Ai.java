@@ -1,12 +1,14 @@
 import java.util.*;
+import java.util.concurrent.*;
 
 public class Ai {
   final long MAX_VALUE = (long)Math.pow(2, 30) - 1;
-  final long MIN_VALUE = -((long)Math.pow(2, 30));
+  public static final long MIN_VALUE = -((long)Math.pow(2, 30));
   final long PRESEARCH_DEPTH = 3;
+  final long SORT_DEPTH = 8;
   final long NORMAL_DEPTH = 6; //#15
-  public static final long WINLOSE_DEPTH = 5; //#15
-  final long PERFECT_DEPTH = 5;  // #13
+  public static final long WINLOSE_DEPTH = 15; //#15
+  final long PERFECT_DEPTH = 15;  // #13
 
   PerfectEvaluator perfectEvaluator;
   WinLoseEvaluator winLoseEvaluator;
@@ -18,17 +20,15 @@ public class Ai {
     midEvaluator = new MidEvaluator();
   }
 
-  public Move getMove(Board board) {
+  public CopyOnWriteArraySet<Move> getMove(Board board) {
     long result = MIN_VALUE;
 
-    HashSet<Disc> movables = board.getMovablePos();
+    CopyOnWriteArraySet<Disc> movables = board.getMovablePos();
 
     if (movables.isEmpty()) {
       board.pass();
       return null;
     }
-
-    Object[] sortedMove = sort(board, movables, PRESEARCH_DEPTH);
 
     long limit;
     if (Board.MAX_TURNS - board.getTurn() <= WINLOSE_DEPTH) {
@@ -37,24 +37,34 @@ public class Ai {
       limit = NORMAL_DEPTH;
     }
 
+    Object[] sortedMove = sort(board, movables, PRESEARCH_DEPTH);
+
+    CopyOnWriteArraySet<Move> selected = new CopyOnWriteArraySet<Move>();
+    selected.add((Move)sortedMove[0]);
     int i;
-    Move selected = (Move)sortedMove[0];
+    System.out.print("getMove t=" + board.getTurn() + "c=" + board.getCurrentColor() + "l=" + sortedMove.length);
     for (i=0; i < sortedMove.length; i++) {
       Move move = (Move)sortedMove[i];
+      System.out.print("m=" + (move.x * 10 + move.y) + "e=" + move.eval);
       Disc disc = new Disc(move.x, move.y, board.getCurrentColor());
       board.put(disc.getPos(), disc.color);
       long eval = -(alphaBeta(board, limit - 1, MIN_VALUE, MAX_VALUE));
       board.undo();
+      System.out.print("e=" + eval);
       if (eval > result) {
         result = eval;
-        selected = move;
-        selected.eval = eval;
+        move.eval = eval;
+        selected.clear();
+        selected.add(move);
+      } else if (eval == result) {
+        move.eval = eval;
+        selected.add(move);
       }
     }
     return selected;
   }
 
-  Object[] sort(Board board, HashSet<Disc> movables, long limit) {
+  Object[] sort(Board board, CopyOnWriteArraySet<Disc> movables, long limit) {
     ArrayList<Move> al = new ArrayList<Move>(movables.size());
     Iterator<Disc> it = movables.iterator();
     while (it.hasNext()) {
@@ -73,8 +83,8 @@ public class Ai {
     public int compare(Object o1, Object o2) {
       Move m1 = (Move)o1;
       Move m2 = (Move)o2;
-      if (m2.eval - m1.eval > 0) { return 1;}
-      if (m2.eval - m1.eval < 0) { return -1;}
+      if (m2.eval > m1.eval) { return 1;}
+      if (m2.eval < m1.eval) { return -1;}
       return 0;
     }
   }
@@ -87,7 +97,7 @@ public class Ai {
       return result;
     }
 
-    HashSet<Disc> movables = board.getMovablePos();
+    CopyOnWriteArraySet<Disc> movables = board.getMovablePos();
 
     if (movables.isEmpty()) {
       board.pass();
@@ -109,9 +119,11 @@ public class Ai {
   }
 
   long evaluate(Board board) {
+    long result;
     int remain_turn = Board.MAX_TURNS - board.getTurn();
     if (remain_turn <= PERFECT_DEPTH) {
-      return perfectEvaluator.evaluate(board);
+      result = perfectEvaluator.evaluate(board);
+      return result;
     }
     if (remain_turn <= WINLOSE_DEPTH) {
       return winLoseEvaluator.evaluate(board);

@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.concurrent.*;
 
 public class Board {
   public static final int MAX_TURNS = 60;
@@ -38,15 +39,23 @@ public class Board {
 
   ArrayDeque<LinkedList<Integer>> updateLog; //Stack of updated discs by turn
 
-  HashSet<Disc>[] movablePos; //movable positions by turn
+  CopyOnWriteArraySet<Disc>[] movablePos; //movable positions by turn
+
+  HashSet<Integer> freePos;
 
   public Board () {
     contents = new int[NUM_DISK];
     discNum = new int[3];
     pattern = new int[Pattern.ID_LAST];
-    movablePos = new HashSet[MAX_TURNS + 1];
+    //initialize movablePos
+    movablePos = new CopyOnWriteArraySet[MAX_TURNS + 1];
     for (int i=0; i < MAX_TURNS + 1; i++) {
-      movablePos[i] = new HashSet<Disc>();
+      movablePos[i] = new CopyOnWriteArraySet<Disc>();
+    }
+    //initialize freePos
+    freePos = new HashSet<Integer>();
+    for (int i=0; i < Pattern.allPos.length; i++) {
+      freePos.add(Pattern.allPos[i]);
     }
     InitializePatternDiff();  //set constant for update index by pattern
     Clear();  //initial board setting
@@ -122,15 +131,27 @@ public class Board {
     if (turn > MAX_TURNS) { return; }
     int i, j, cf;
     movablePos[turn].clear();
-    for (j=0; j < BOARD_SIZE; j++) {
-      for (i=0; i < BOARD_SIZE; i++) {
-        Disc disc = new Disc(i+1, j+1, currentColor);
-        cf = getCountFlip(disc.getPos(), disc.color);
-        if (cf > 0) {
-          movablePos[turn].add(disc);
+    Iterator it = freePos.iterator();
+    while (it.hasNext()) {
+      int pos = (int)it.next();
+      cf = getCountFlip(pos, currentColor);
+      if (cf > 0) {
+        Disc disc = new Disc(pos % (BOARD_SIZE + 1), pos / (BOARD_SIZE + 1), currentColor);
+        if (Debug.state) {
+          Debug.println("mp=(" + disc.x + "," + disc.y);
         }
+        movablePos[turn].add(disc);
       }
     }
+//    for (j=0; j < BOARD_SIZE; j++) {
+//      for (i=0; i < BOARD_SIZE; i++) {
+//        Disc disc = new Disc(i+1, j+1, currentColor);
+//        cf = getCountFlip(disc.getPos(), disc.color);
+//        if (cf > 0) {
+//          movablePos[turn].add(disc);
+//        }
+//      }
+//    }
   }
 
   //count flipable discs in all lines 
@@ -138,14 +159,106 @@ public class Board {
     int altColor = getAltColor(color);
     int result = 0;
     if (contents[pos] != EMPTY) {return 0;} //cannot put disc at this position
-    result += getCountFlipLine(pos, color, altColor, UP_LEFT);
-    result += getCountFlipLine(pos, color, altColor, UP);
-    result += getCountFlipLine(pos, color, altColor, UP_RIGHT);
-    result += getCountFlipLine(pos, color, altColor, LEFT);
-    result += getCountFlipLine(pos, color, altColor, RIGHT);
-    result += getCountFlipLine(pos, color, altColor, DOWN_LEFT);
-    result += getCountFlipLine(pos, color, altColor, DOWN);
-    result += getCountFlipLine(pos, color, altColor, DOWN_RIGHT);
+    switch (pos) {
+    case Pattern.C1:
+    case Pattern.C2:
+    case Pattern.D1:
+    case Pattern.D2:
+    case Pattern.E1:
+    case Pattern.E2:
+    case Pattern.F1:
+    case Pattern.F2:
+      result += getCountFlipLine(pos, color, altColor, LEFT);
+      result += getCountFlipLine(pos, color, altColor, RIGHT);
+      result += getCountFlipLine(pos, color, altColor, DOWN_LEFT);
+      result += getCountFlipLine(pos, color, altColor, DOWN);
+      result += getCountFlipLine(pos, color, altColor, DOWN_RIGHT);
+      break;
+    case Pattern.C7:
+    case Pattern.C8:
+    case Pattern.D7:
+    case Pattern.D8:
+    case Pattern.E7:
+    case Pattern.E8:
+    case Pattern.F7:
+    case Pattern.F8:
+      result += getCountFlipLine(pos, color, altColor, UP_LEFT);
+      result += getCountFlipLine(pos, color, altColor, UP);
+      result += getCountFlipLine(pos, color, altColor, UP_RIGHT);
+      result += getCountFlipLine(pos, color, altColor, LEFT);
+      result += getCountFlipLine(pos, color, altColor, RIGHT);
+      break;
+    case Pattern.A3:
+    case Pattern.A4:
+    case Pattern.A5:
+    case Pattern.A6:
+    case Pattern.B3:
+    case Pattern.B4:
+    case Pattern.B5:
+    case Pattern.B6:
+      result += getCountFlipLine(pos, color, altColor, UP);
+      result += getCountFlipLine(pos, color, altColor, UP_RIGHT);
+      result += getCountFlipLine(pos, color, altColor, RIGHT);
+      result += getCountFlipLine(pos, color, altColor, DOWN);
+      result += getCountFlipLine(pos, color, altColor, DOWN_RIGHT);
+      break;
+    case Pattern.H3:
+    case Pattern.H4:
+    case Pattern.H5:
+    case Pattern.H6:
+    case Pattern.G3:
+    case Pattern.G4:
+    case Pattern.G5:
+    case Pattern.G6:
+      result += getCountFlipLine(pos, color, altColor, UP_LEFT);
+      result += getCountFlipLine(pos, color, altColor, UP);
+      result += getCountFlipLine(pos, color, altColor, LEFT);
+      result += getCountFlipLine(pos, color, altColor, DOWN_LEFT);
+      result += getCountFlipLine(pos, color, altColor, DOWN);
+      break;
+    case Pattern.A1:
+    case Pattern.A2:
+    case Pattern.B1:
+    case Pattern.B2:
+      result += getCountFlipLine(pos, color, altColor, RIGHT);
+      result += getCountFlipLine(pos, color, altColor, DOWN);
+      result += getCountFlipLine(pos, color, altColor, DOWN_RIGHT);
+      break;
+    case Pattern.A8:
+    case Pattern.A7:
+    case Pattern.B8:
+    case Pattern.B7:
+      result += getCountFlipLine(pos, color, altColor, UP);
+      result += getCountFlipLine(pos, color, altColor, UP_RIGHT);
+      result += getCountFlipLine(pos, color, altColor, RIGHT);
+      break;
+    case Pattern.H1:
+    case Pattern.H2:
+    case Pattern.G1:
+    case Pattern.G2:
+      result += getCountFlipLine(pos, color, altColor, LEFT);
+      result += getCountFlipLine(pos, color, altColor, DOWN_LEFT);
+      result += getCountFlipLine(pos, color, altColor, DOWN);
+      break;
+    case Pattern.H8:
+    case Pattern.H7:
+    case Pattern.G8:
+    case Pattern.G7:
+      result += getCountFlipLine(pos, color, altColor, UP_LEFT);
+      result += getCountFlipLine(pos, color, altColor, UP);
+      result += getCountFlipLine(pos, color, altColor, LEFT);
+      break;
+    default:
+      result += getCountFlipLine(pos, color, altColor, UP_LEFT);
+      result += getCountFlipLine(pos, color, altColor, UP);
+      result += getCountFlipLine(pos, color, altColor, UP_RIGHT);
+      result += getCountFlipLine(pos, color, altColor, LEFT);
+      result += getCountFlipLine(pos, color, altColor, RIGHT);
+      result += getCountFlipLine(pos, color, altColor, DOWN_LEFT);
+      result += getCountFlipLine(pos, color, altColor, DOWN);
+      result += getCountFlipLine(pos, color, altColor, DOWN_RIGHT);
+      break;
+    }
     return result;
   }
 
@@ -194,7 +307,7 @@ public class Board {
     return currentColor;
   }
 
-  public HashSet<Disc> getMovablePos() {
+  public CopyOnWriteArraySet<Disc> getMovablePos() {
     return movablePos[turn];  //all movable pos info at current turn
   }
 
@@ -215,14 +328,106 @@ public class Board {
     LinkedList<Integer> update = new LinkedList<Integer>();
     //flip discs to all directions
     int altColor = getAltColor(color);
-    result += flipLine(update, pos, color, altColor, UP_LEFT);
-    result += flipLine(update, pos, color, altColor, UP);
-    result += flipLine(update, pos, color, altColor, UP_RIGHT);
-    result += flipLine(update, pos, color, altColor, LEFT);
-    result += flipLine(update, pos, color, altColor, RIGHT);
-    result += flipLine(update, pos, color, altColor, DOWN_LEFT);
-    result += flipLine(update, pos, color, altColor, DOWN);
-    result += flipLine(update, pos, color, altColor, DOWN_RIGHT);
+    switch (pos) {
+    case Pattern.C1:
+    case Pattern.C2:
+    case Pattern.D1:
+    case Pattern.D2:
+    case Pattern.E1:
+    case Pattern.E2:
+    case Pattern.F1:
+    case Pattern.F2:
+      result += flipLine(update, pos, color, altColor, LEFT);
+      result += flipLine(update, pos, color, altColor, RIGHT);
+      result += flipLine(update, pos, color, altColor, DOWN_LEFT);
+      result += flipLine(update, pos, color, altColor, DOWN);
+      result += flipLine(update, pos, color, altColor, DOWN_RIGHT);
+      break;
+    case Pattern.C7:
+    case Pattern.C8:
+    case Pattern.D7:
+    case Pattern.D8:
+    case Pattern.E7:
+    case Pattern.E8:
+    case Pattern.F7:
+    case Pattern.F8:
+      result += flipLine(update, pos, color, altColor, UP_LEFT);
+      result += flipLine(update, pos, color, altColor, UP);
+      result += flipLine(update, pos, color, altColor, UP_RIGHT);
+      result += flipLine(update, pos, color, altColor, LEFT);
+      result += flipLine(update, pos, color, altColor, RIGHT);
+      break;
+    case Pattern.A3:
+    case Pattern.A4:
+    case Pattern.A5:
+    case Pattern.A6:
+    case Pattern.B3:
+    case Pattern.B4:
+    case Pattern.B5:
+    case Pattern.B6:
+      result += flipLine(update, pos, color, altColor, UP);
+      result += flipLine(update, pos, color, altColor, UP_RIGHT);
+      result += flipLine(update, pos, color, altColor, RIGHT);
+      result += flipLine(update, pos, color, altColor, DOWN);
+      result += flipLine(update, pos, color, altColor, DOWN_RIGHT);
+      break;
+    case Pattern.H3:
+    case Pattern.H4:
+    case Pattern.H5:
+    case Pattern.H6:
+    case Pattern.G3:
+    case Pattern.G4:
+    case Pattern.G5:
+    case Pattern.G6:
+      result += flipLine(update, pos, color, altColor, UP_LEFT);
+      result += flipLine(update, pos, color, altColor, UP);
+      result += flipLine(update, pos, color, altColor, LEFT);
+      result += flipLine(update, pos, color, altColor, DOWN_LEFT);
+      result += flipLine(update, pos, color, altColor, DOWN);
+      break;
+    case Pattern.A1:
+    case Pattern.A2:
+    case Pattern.B1:
+    case Pattern.B2:
+      result += flipLine(update, pos, color, altColor, RIGHT);
+      result += flipLine(update, pos, color, altColor, DOWN);
+      result += flipLine(update, pos, color, altColor, DOWN_RIGHT);
+      break;
+    case Pattern.A8:
+    case Pattern.A7:
+    case Pattern.B8:
+    case Pattern.B7:
+      result += flipLine(update, pos, color, altColor, UP);
+      result += flipLine(update, pos, color, altColor, UP_RIGHT);
+      result += flipLine(update, pos, color, altColor, RIGHT);
+      break;
+    case Pattern.H1:
+    case Pattern.H2:
+    case Pattern.G1:
+    case Pattern.G2:
+      result += flipLine(update, pos, color, altColor, LEFT);
+      result += flipLine(update, pos, color, altColor, DOWN_LEFT);
+      result += flipLine(update, pos, color, altColor, DOWN);
+      break;
+    case Pattern.H8:
+    case Pattern.H7:
+    case Pattern.G8:
+    case Pattern.G7:
+      result += flipLine(update, pos, color, altColor, UP_LEFT);
+      result += flipLine(update, pos, color, altColor, UP);
+      result += flipLine(update, pos, color, altColor, LEFT);
+      break;
+    default:
+      result += flipLine(update, pos, color, altColor, UP_LEFT);
+      result += flipLine(update, pos, color, altColor, UP);
+      result += flipLine(update, pos, color, altColor, UP_RIGHT);
+      result += flipLine(update, pos, color, altColor, LEFT);
+      result += flipLine(update, pos, color, altColor, RIGHT);
+      result += flipLine(update, pos, color, altColor, DOWN_LEFT);
+      result += flipLine(update, pos, color, altColor, DOWN);
+      result += flipLine(update, pos, color, altColor, DOWN_RIGHT);
+      break;
+    }
     if (result > 0) {
       update.push(pos);      //save position of putted disc
     }
@@ -234,6 +439,7 @@ public class Board {
     discNum[color]++;
     discNum[EMPTY]--;
     changePattern(pos, color);  //change index of pattern (include pos)
+    freePos.remove(pos);
   }
 
   //flip discs in given line
@@ -277,6 +483,7 @@ public class Board {
     LinkedList<Integer> update = updateLog.pop();
     if (!update.isEmpty()) {
       int pos = update.pop(); //get position of put disc in previous action
+      freePos.add(pos);
       changePattern(pos, -(contents[pos])); //change index of pattern (include pos)
       discNum[contents[pos]]--;
       discNum[EMPTY]++;
