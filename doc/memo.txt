@@ -1,0 +1,11 @@
+int PatternID[NUM_DISK][NUM_PATTERN_DIFF];
+
+  NUM_DISK : Disk Position No.
+  NUM_PATTERN_DIFF: occurence
+  value: Pattern ID No. of this disc
+
+int PatternDiff[NUM_DISK][NUM_PATTERN_DIFF];
+
+  NUM_DISK : Disk Position No.
+  NUM_PATTERN_DIFF: occurence
+  value: (Position of this disk) ^ 3 .. for flip disk

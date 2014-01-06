@@ -46,8 +46,7 @@ public class Ai {
     for (i=0; i < sortedMove.length; i++) {
       Move move = (Move)sortedMove[i];
       System.out.print("m=" + (move.x * 10 + move.y) + "e=" + move.eval);
-      Disc disc = new Disc(move.x, move.y, board.getCurrentColor());
-      board.put(disc.getPos(), disc.color);
+      board.autoPut(move.getPos(), board.getCurrentColor(), move.flipFlg);
       long eval = -(alphaBeta(board, limit - 1, MIN_VALUE, MAX_VALUE));
       board.undo();
       System.out.print("e=" + eval);
@@ -65,17 +64,28 @@ public class Ai {
   }
 
   Object[] sort(Board board, CopyOnWriteArraySet<Disc> movables, long limit) {
+    Object[] oa = new Object[movables.size()];
     ArrayList<Move> al = new ArrayList<Move>(movables.size());
-    Iterator<Disc> it = movables.iterator();
-    while (it.hasNext()) {
-      Disc disc = it.next();
-      board.put(disc.getPos(), disc.color);
-      long eval = -(alphaBeta(board, limit - 1, MIN_VALUE, MAX_VALUE));
-      board.undo();
-      al.add(new Move(disc.x, disc.y, eval));
+    Disc disc;
+    if (Board.MAX_TURNS - board.getTurn() > SORT_DEPTH) {
+      Iterator<Disc> it = movables.iterator();
+      while (it.hasNext()) {
+        disc = it.next();
+        board.autoPut(disc.getPos(), disc.color, disc.flipFlg);
+        long eval = -(alphaBeta(board, limit - 1, MIN_VALUE, MAX_VALUE));
+        board.undo();
+        al.add(new Move(disc.x, disc.y, eval, disc.flipFlg));
+      }
+      oa = al.toArray();
+      Arrays.sort(oa, new MoveComparator());
+    } else {
+      Iterator<Disc> it = movables.iterator();
+      while (it.hasNext()) {
+        disc = it.next();
+        al.add(new Move(disc.x, disc.y, 0, disc.flipFlg));
+      }
+      oa = al.toArray();
     }
-    Object[] oa = al.toArray();
-    Arrays.sort(oa, new MoveComparator());
     return oa;
   }
 
@@ -91,6 +101,17 @@ public class Ai {
 
   long alphaBeta(Board board, long limit, long alpha, long beta) {
     long result;
+
+    //last 1 turn -> evaluate + flip count (not exec board.put)
+    if (board.getTurn() == Board.MAX_TURNS - 1) {
+      CopyOnWriteArraySet<Disc> movables = board.getMovablePos();
+      if (!movables.isEmpty()) {
+        Disc disc = (Disc)movables.toArray()[0];
+        int[] cf = board.getCountFlip(disc.getPos(), board.getCurrentColor());
+        result = cf[0] * 2 + 1 + evaluate(board);
+        return result;
+      }
+    }
 
     if (limit == 0 || board.isGameOver()) {
       result = evaluate(board);
@@ -109,7 +130,7 @@ public class Ai {
     Iterator<Disc> it = movables.iterator();
     while (it.hasNext()) {
       Disc disc = it.next();
-      board.put(disc.getPos(), disc.color);
+      board.autoPut(disc.getPos(), disc.color, disc.flipFlg);
       long eval = -(alphaBeta(board, limit, -(beta), -(alpha)));
       board.undo();
       alpha = Math.max(alpha, eval);
